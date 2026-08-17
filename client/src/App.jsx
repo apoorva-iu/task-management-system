@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
-
+const API_BASE = import.meta.env.VITE_API_URL || "https://taskflow-backend-qsva.onrender.com";
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem("tm_token"));
   const [user, setUser] = useState(JSON.parse(localStorage.getItem("tm_user") || "{}"));
