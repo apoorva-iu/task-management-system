@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API_BASE = import.meta.env.VITE_API_URL || "https://taskflow-backend-qsva.onrender.com";
+const API_BASE = "https://taskflow-backend-qsva.onrender.com";
+
 export default function App() {
   const [token, setToken] = useState(localStorage.getItem("tm_token"));
   const [user, setUser] = useState(JSON.parse(localStorage.getItem("tm_user") || "{}"));
   const [isLogin, setIsLogin] = useState(true);
   const [authForm, setAuthForm] = useState({ name: "", email: "", password: "" });
+  const [loading, setLoading] = useState(false);
 
   const [tasks, setTasks] = useState([]);
   const [search, setSearch] = useState("");
@@ -34,6 +36,7 @@ export default function App() {
 
   const handleAuth = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       if (isLogin) {
         // Sign In Flow -> Sets credentials and goes directly to dashboard
@@ -50,7 +53,11 @@ export default function App() {
         setAuthForm({ name: "", email: authForm.email, password: "" });
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Authentication error");
+      console.error("Auth error details:", err);
+      const serverMsg = err.response?.data?.message || (typeof err.response?.data === "string" ? err.response.data : null);
+      alert(`Error: ${serverMsg || err.message || "Network Error / Render backend spinning up"}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -150,8 +157,8 @@ export default function App() {
                   <input className="glass-input" type="password" required placeholder="••••••••" value={authForm.password} onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })} />
                 </div>
 
-                <button type="submit" className="btn-glass-primary" style={{ width: "100%", marginTop: "6px" }}>
-                  {isLogin ? "Sign In" : "Get Started"}
+                <button type="submit" disabled={loading} className="btn-glass-primary" style={{ width: "100%", marginTop: "6px" }}>
+                  {loading ? "Processing..." : isLogin ? "Sign In" : "Get Started"}
                 </button>
               </form>
 
@@ -165,7 +172,7 @@ export default function App() {
           </div>
         </div>
       ) : (
-        /* PROFESSIONAL DASHBOARD SCREEN */
+        /* DASHBOARD SCREEN */
         <div className="dashboard-page-wrapper">
           <nav className="glass-navbar">
             <div className="nav-brand-title">
@@ -178,7 +185,6 @@ export default function App() {
           </nav>
 
           <main className="main-content-layout">
-            {/* Header Title Banner */}
             <div className="dashboard-header-banner">
               <div>
                 <h2>Task Operations Dashboard</h2>
@@ -186,7 +192,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Overview Metric Cards */}
             <div className="glass-metrics-grid">
               <div className="glass-stat-card glass-container">
                 <div className="stat-header-row">
@@ -225,7 +230,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Task Creation & Edit Form */}
             <div className="glass-panel glass-container">
               <div className="glass-panel-title">{editId ? "✏️ Edit Task Details" : "➕ Create New Task"}</div>
               <form onSubmit={handleTaskSubmit} className="glass-form-grid">
@@ -252,7 +256,6 @@ export default function App() {
               </form>
             </div>
 
-            {/* Search & Filter Bar */}
             <div className="glass-panel glass-container filter-wrapper">
               <div className="glass-filter-grid">
                 <input className="glass-input" placeholder="🔍 Search tasks by title..." value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -272,7 +275,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Task Grid Cards */}
             <div className="glass-task-grid">
               {filteredTasks.map((t) => (
                 <div className={`glass-task-item glass-container item-status-${t.status.replace(" ", "-")}`} key={t._id}>
